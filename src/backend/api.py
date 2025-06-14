@@ -4,17 +4,18 @@ def readCSVFile(filePath):
     try:
         data = pd.read_csv(filePath)
         studentsArrays = data.values.tolist()
-        return studentsArrays
+        columns = list(data.columns)
+        return studentsArrays, columns
     except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
-        return None
+        return None, None
 
 def validateNotas(studentsArrays):
     errors = []
     for i, student in enumerate(studentsArrays):
         for j in range(2, 5):
             try:
-                student[j] = float(student[j])
-                if not 0 <= student[j] <= 10:
+                nota = float(student[j])
+                if not 0 <= nota <= 10:
                     errors.append((i, j, "Nota fuera de rango"))
             except ValueError:
                 errors.append((i, j, "Nota no numérica"))
@@ -45,16 +46,14 @@ def listaCompleta(studentsArrays):
         for student in studentsArrays
     ]
 
-def promedioPorMateria(studentsArrays):
-    nota1_sum = sum(float(student[2]) for student in studentsArrays)
-    nota2_sum = sum(float(student[3]) for student in studentsArrays)
-    nota3_sum = sum(float(student[4]) for student in studentsArrays)
-    count = len(studentsArrays)
-    return {
-        "Materia 1": round(nota1_sum / count, 2),
-        "Materia 2": round(nota2_sum / count, 2),
-        "Materia 3": round(nota3_sum / count, 2)
-    }
+def promedioPorMateria(studentsArrays, materias=None):
+    if materias is None:
+        materias = ["Materia 1", "Materia 2", "Materia 3"]
+    promedios = {}
+    for idx, materia in enumerate(materias, start=2):
+        suma = sum(float(student[idx]) for student in studentsArrays)
+        promedios[materia] = round(suma / len(studentsArrays), 2)
+    return promedios
 
 def mostrarAlumnosPorEncimaDelUmbral(studentsArrays, threshold):
     return [
@@ -62,9 +61,10 @@ def mostrarAlumnosPorEncimaDelUmbral(studentsArrays, threshold):
             "Nombre": student[0],
             "Legajo": student[1],
             "Notas": [student[2], student[3], student[4]],
-            "Promedio": student[5]
+            "Promedio": round((float(student[2]) + float(student[3]) + float(student[4])) / 3, 2)
         }
-        for student in studentsArrays if student[5] > threshold
+        for student in studentsArrays
+        if (float(student[2]) + float(student[3]) + float(student[4])) / 3 > threshold
     ]
 
 def mostrarAlumnosDesaprobados(studentsArrays):
@@ -73,12 +73,16 @@ def mostrarAlumnosDesaprobados(studentsArrays):
             "Nombre": student[0],
             "Legajo": student[1],
             "Notas": [student[2], student[3], student[4]],
-            "Promedio": student[5]
+            "Promedio": round((float(student[2]) + float(student[3]) + float(student[4])) / 3, 2)
         }
-        for student in studentsArrays if any(float(n) < 4 for n in student[2:5])
+        for student in studentsArrays
+        if any(float(n) < 4 for n in student[2:5])
     ]
 
 def calcularAprobadosDesaprobados(studentsArrays):
-    aprobados = sum(1 for student in studentsArrays if student[5] >= 4)
+    aprobados = sum(
+        1 for student in studentsArrays
+        if (float(student[2]) + float(student[3]) + float(student[4])) / 3 >= 4
+    )
     desaprobados = len(studentsArrays) - aprobados
     return {"Aprobados": aprobados, "Desaprobados": desaprobados}

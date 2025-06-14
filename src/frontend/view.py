@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.api import (
-    readCSVFile, validateNotas, calculateNotaFinal, listaCompleta,
-    promedioPorMateria, mostrarAlumnosPorEncimaDelUmbral,
+    readCSVFile, validateNotas, calculateNotaFinal,
+    mostrarAlumnosPorEncimaDelUmbral,
     mostrarAlumnosDesaprobados, calcularAprobadosDesaprobados
 )
-
 class GradeApp:
     def __init__(self, root):
         self.root = root
@@ -44,8 +46,9 @@ class GradeApp:
         path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if not path:
             return
-        self.students = readCSVFile(path)
+        self.students, self.columns = readCSVFile(path)
         if self.students:
+            self.materias = self.columns[2:5]
             self.refresh_tree()
             messagebox.showinfo("Cargado", "Archivo CSV cargado exitosamente.")
         else:
@@ -55,8 +58,17 @@ class GradeApp:
         if not self.students:
             messagebox.showwarning("Advertencia", "Primero cargue un archivo CSV.")
             return
-        self.students = validateNotas(self.students)
-        messagebox.showinfo("Validado", "Notas validadas.")
+        self.students, errors = validateNotas(self.students)
+        if not hasattr(self, 'materias') and hasattr(self, 'columns'):
+            self.materias = self.columns[2:5]
+        if errors:
+            msg = "Errores encontrados:\n"
+            for err in errors:
+                fila, columna, descripcion = err
+                msg += f"Fila {fila+1}, Columna {columna+1}: {descripcion}\n"
+            messagebox.showerror("Errores de validación", msg)
+        else:
+            messagebox.showinfo("Validado", "Todas las notas son válidas.")
 
     def calculate(self):
         if not self.students:
@@ -76,8 +88,17 @@ class GradeApp:
         if not self.students:
             messagebox.showwarning("Advertencia", "No hay datos.")
             return
-        avg = promedioPorMateria(self.students)
-        messagebox.showinfo("Promedios por materia", f"Materia 1: {avg['Materia 1']:.2f}\nMateria 2: {avg['Materia 2']:.2f}\nMateria 3: {avg['Materia 3']:.2f}")
+        materias = set(student[1] for student in self.students)
+        msg = ""
+        for materia in materias:
+            notas = [
+                float(student[5]) if len(student) > 5 else (float(student[2]) + float(student[3]) + float(student[4])) / 3
+                for student in self.students if student[1] == materia
+            ]
+            if notas:
+                promedio = sum(notas) / len(notas)
+                msg += f"{materia}: {promedio:.2f}\n"
+        messagebox.showinfo("Promedios por materia", msg)
 
     def show_above_threshold(self):
         if not self.students:
@@ -104,13 +125,24 @@ class GradeApp:
     def show_filtered_results(self, filtered_list, title):
         win = tk.Toplevel(self.root)
         win.title(title)
-        tree = ttk.Treeview(win, columns=("Nombre", "ID", "Nota1", "Nota2", "Nota3", "Final"), show='headings')
+        tree = ttk.Treeview(win, columns=("Nombre", "Legajo", "Nota1", "Nota2", "Nota3", "Promedio"), show='headings')
         for col in tree["columns"]:
             tree.heading(col, text=col)
         tree.pack(fill="both", expand=True)
 
         for student in filtered_list:
-            tree.insert("", "end", values=student)
+            if isinstance(student, dict):
+                values = (
+                    student.get("Nombre", ""),
+                    student.get("Legajo", ""),
+                    student.get("Notas", ["", "", ""])[0] if "Notas" in student else student.get("Nota1", ""),
+                    student.get("Notas", ["", "", ""])[1] if "Notas" in student else student.get("Nota2", ""),
+                    student.get("Notas", ["", "", ""])[2] if "Notas" in student else student.get("Nota3", ""),
+                    student.get("Promedio", "")
+                )
+            else:
+                values = student
+            tree.insert("", "end", values=values)
 
 
 if __name__ == "__main__":
