@@ -168,9 +168,46 @@ class GradeApp:
                 arrow = " ↓" if reverse else " ↑"
             self.tree.heading(c, text=c + arrow)
 
-        try:
-            self.students.sort(key=lambda x: float(x[col_index]), reverse=reverse)
-        except ValueError:
+        numeric_columns_bubble = ["Nota1", "Nota2"]
+        numeric_columns_insert = ["Nota3", "Promedio"]
+
+        def bubble_sort(arr, key_index, reverse=False):
+            n = len(arr)
+            for i in range(n):
+                for j in range(0, n - i - 1):
+                    try:
+                        a = float(arr[j][key_index])
+                        b = float(arr[j + 1][key_index])
+                        if (a > b and not reverse) or (a < b and reverse):
+                            arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                    except ValueError:
+                        continue
+
+        def insertion_sort(arr, key_index, reverse=False):
+            for i in range(1, len(arr)):
+                key_item = arr[i]
+                try:
+                    key_value = float(key_item[key_index])
+                except ValueError:
+                    continue
+                j = i - 1
+                while j >= 0:
+                    try:
+                        current_value = float(arr[j][key_index])
+                    except ValueError:
+                        break
+                    if (not reverse and current_value > key_value) or (reverse and current_value < key_value):
+                        arr[j + 1] = arr[j]
+                        j -= 1
+                    else:
+                        break
+                arr[j + 1] = key_item
+
+        if col in numeric_columns_bubble:
+            bubble_sort(self.students, col_index, reverse=reverse)
+        elif col in numeric_columns_insert:
+            insertion_sort(self.students, col_index, reverse=reverse)
+        else:
             self.students.sort(key=lambda x: str(x[col_index]), reverse=reverse)
 
         self.refresh_tree()
