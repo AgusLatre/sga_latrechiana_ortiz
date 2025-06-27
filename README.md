@@ -120,7 +120,10 @@ Ordenamiento
 Estructuras de Datos
 -----------------------
 
-*   pythonCopiarEditar\["Juan", "Matemática", 7.5, 8.0, 9.0, 8.17\]
+*   students: Lista de listas, donde cada estudiante es
+    ```
+    ["Juan", "Matemática", 7.5, 8.0, 9.0, 8.17]
+    ```
     
 *   Reportes intermedios: listas de diccionarios {Nombre, Materia, Notas, Promedio}
     
