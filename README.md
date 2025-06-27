@@ -106,7 +106,10 @@ Interfaz gráfica (view.py)
 Ordenamiento
 ---------------
 
-*   **Algoritmo utilizado**: [list.sort()](https://docs.python.org/3/library/stdtypes.html#list.sort), que utiliza **Timsort** (estable, O(n log n))
+*   **Algoritmos utilizado**: 
+- [list.sort()](https://docs.python.org/3/library/stdtypes.html#list.sort), que utiliza **Timsort** (estable, O(n log n))
+- Bubble sort: Se utliza en la Nota 1 y Nota 2 (promedio en O(n²))
+- Insert sort: Se utliza en la Nota 3 y Promedio (promedio en O(n²))
     
 *   **Visualización**: Al hacer clic en los encabezados de columna, se alterna el orden:
     
