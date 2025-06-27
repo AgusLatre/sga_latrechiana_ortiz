@@ -57,14 +57,16 @@ class GradeApp:
         path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if not path:
             return
-        self.students, self.columns = readCSVFile(path)
-        if self.students:
-            self.students = calculateNotaFinal(self.students)
+        new_students, self.columns = readCSVFile(path)
+        if new_students:
+            new_students = calculateNotaFinal(new_students)
+            self.students.extend(new_students)
             self.materias = self.columns[2:5]
             self.refresh_tree()
             messagebox.showinfo("Cargado", "Archivo CSV cargado exitosamente.")
         else:
             messagebox.showerror("Error", "No se pudo cargar el archivo.")
+
 
     def validate(self):
         if not self.students:
